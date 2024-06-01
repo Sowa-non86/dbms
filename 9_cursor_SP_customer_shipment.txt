@@ -1,0 +1,80 @@
+1. List the order# and ship_date for all orders shipped from warehouse number W2.
+
+SELECT order.order#, shipment.ship_date
+FROM order
+JOIN shipment ON order.order# = shipment.order#
+WHERE shipment.warehouse# = 'W2';
+
+
+2. List the warehouse information from which the customer named 'Jose Lopez' was shipped his order.
+SELECT warehouse.*
+FROM customer
+JOIN order ON customer.cust# = order.cust#
+JOIN shipment ON order.order# = shipment.order#
+JOIN warehouse ON shipment.warehouse# = warehouse.warehouse#
+WHERE customer.cname = 'Jose Lopez';
+
+
+3. List the orders that were not shipped within 30 days of ordering.
+SELECT order.*
+FROM order
+LEFT JOIN shipment ON order.order# = shipment.order#
+WHERE shipment.ship_date > DATE_ADD(order.odate, INTERVAL 30 DAY) OR shipment.ship_date IS NULL;
+
+
+4. List the order# for orders that were shipped from all warehouses that the company has in New York.
+SELECT order.order#
+FROM order
+JOIN shipment ON order.order# = shipment.order#
+JOIN warehouse ON shipment.warehouse# = warehouse.warehouse#
+WHERE warehouse.city = 'New York';
+
+5.Write a cursor to extract order details.
+
+DELIMITER $$
+CREATE PROCEDURE extract_order_details()
+BEGIN
+    DECLARE done BOOLEAN DEFAULT FALSE;
+    DECLARE order_num INT;
+    DECLARE order_date DATE;
+    DECLARE customer_id INT;
+    DECLARE order_total DECIMAL(10, 2);
+
+    DECLARE order_cursor CURSOR FOR
+        SELECT order.order#, order.odate, order.cust#, order.ord_amt
+        FROM order;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN order_cursor;
+
+    read_loop: LOOP
+        FETCH order_cursor INTO order_num, order_date, customer_id, order_total;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Process order details here
+        SELECT CONCAT('Order #: ', order_num, ', Order Date: ', order_date, ', Customer #: ', customer_id, ', Total: $', order_total);
+    END LOOP;
+
+    CLOSE order_cursor;
+END$$
+DELIMITER ;
+
+
+
+
+Relational Database: The given problem deals with a relational database where data is organized into tables (relations) with rows (tuples) and columns (attributes).
+
+Primary Key: Each table should have a primary key, which is a column or a combination of columns that uniquely identifies each row in the table. For example, order# is likely the primary key for the order table.
+
+Foreign Key: A foreign key is a column or a combination of columns that refers to the primary key of another table. This establishes a relationship between the tables. For example, order.cust# is likely a foreign key referring to the customer table's primary key.
+
+Joins: To retrieve data from multiple related tables, we use JOIN operations. The queries above demonstrate the use of INNER JOIN and LEFT JOIN to combine data from different tables based on the primary key-foreign key relationships.
+
+Subqueries: Some queries may involve nested subqueries, which are queries within queries, to retrieve data based on complex conditions.
+
+Cursors: Cursors are used to process rows of data one by one from a result set. The last query demonstrates the use of a cursor to iterate through the rows of the order table and process each order's details.
+
+Stored Procedures: The cursor example is written as a stored procedure, which is a pre-compiled collection of SQL statements that can be executed as a single unit and can accept parameters.

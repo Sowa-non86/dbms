@@ -1,0 +1,137 @@
+16. A TV, Fridge, washing machine. Microwave selling shop wants to keep following information
+
+1. Name, mobile number, no. of persons in house of person purchasing any item
+
+2. If any person purchases 2 items then he will be given 5% discount on third item.
+
+3. Number of persons purchasing 2 items.
+
+4. List of combination of items purchased by people.
+
+5. Count of people purchasing 1.2.3 items.
+
+6. Count of people purchased microwave who are having more than 4 no, of Persons in house.
+
+7. Count of people purchased TV having 2 people in a house.
+
+8. No. of different items sold during given period.
+
+9. Sales amount collected per item during given period
+
+10. Revenue generated during given period.
+
+
+-- 1. Creating the Database
+CREATE DATABASE ApplianceShop;
+USE ApplianceShop;
+
+-- 2. Creating Tables
+
+-- Table: Customer
+CREATE TABLE Customer (
+    CustomerID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    MobileNumber VARCHAR(15),
+    PersonsInHouse INT
+);
+
+-- Table: Item
+CREATE TABLE Item (
+    ItemID INT AUTO_INCREMENT PRIMARY KEY,
+    ItemName VARCHAR(50),
+    Price DECIMAL(10, 2)
+);
+
+-- Table: Purchase
+CREATE TABLE Purchase (
+    PurchaseID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT,
+    ItemID INT,
+    PurchaseDate DATE,
+    DiscountApplied BOOLEAN,
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID)
+);
+
+-- 3. Inserting Initial Data
+
+-- Insert sample data into Item
+INSERT INTO Item (ItemName, Price) VALUES 
+('TV', 500.00), 
+('Fridge', 700.00), 
+('Washing Machine', 400.00), 
+('Microwave', 200.00);
+
+-- 4. Queries for Specific Requirements
+
+-- 4.1 Name, mobile number, no. of persons in house of person purchasing any item
+SELECT c.Name, c.MobileNumber, c.PersonsInHouse
+FROM Customer c
+JOIN Purchase p ON c.CustomerID = p.CustomerID;
+
+-- 4.2 If any person purchases 2 items then he will be given 5% discount on third item
+UPDATE Purchase
+SET DiscountApplied = TRUE
+WHERE CustomerID IN (
+    SELECT CustomerID
+    FROM (
+        SELECT CustomerID
+        FROM Purchase
+        WHERE DiscountApplied = FALSE
+        GROUP BY CustomerID
+        HAVING COUNT(ItemID) >= 2
+    ) AS T
+) AND DiscountApplied = FALSE;
+
+-- 4.3 Number of persons purchasing 2 items
+SELECT COUNT(DISTINCT CustomerID) AS NumOfPersonsPurchasingTwoItems
+FROM Purchase
+WHERE DiscountApplied = TRUE
+GROUP BY CustomerID
+HAVING COUNT(ItemID) = 2;
+
+-- 4.4 List of combination of items purchased by people
+SELECT GROUP_CONCAT(ItemName) AS Combination
+FROM Item
+JOIN Purchase ON Item.ItemID = Purchase.ItemID
+GROUP BY CustomerID;
+
+-- 4.5 Count of people purchasing 1, 2, 3 items
+SELECT COUNT(DISTINCT CustomerID) AS NumOfPersons, 
+       CASE 
+           WHEN COUNT(ItemID) = 1 THEN '1 item' 
+           WHEN COUNT(ItemID) = 2 THEN '2 items' 
+           WHEN COUNT(ItemID) = 3 THEN '3 items' 
+       END AS NumOfItems
+FROM Purchase
+GROUP BY NumOfItems;
+
+-- 4.6 Count of people purchased microwave who are having more than 4 no. of Persons in house
+SELECT COUNT(DISTINCT Purchase.CustomerID) AS NumOfPersons
+FROM Purchase
+JOIN Customer ON Purchase.CustomerID = Customer.CustomerID
+WHERE Purchase.ItemID = (SELECT ItemID FROM Item WHERE ItemName = 'Microwave')
+AND Customer.PersonsInHouse > 4;
+
+-- 4.7 Count of people purchased TV having 2 people in a house
+SELECT COUNT(DISTINCT Purchase.CustomerID) AS NumOfPersons
+FROM Purchase
+JOIN Customer ON Purchase.CustomerID = Customer.CustomerID
+WHERE Purchase.ItemID = (SELECT ItemID FROM Item WHERE ItemName = 'TV')
+AND Customer.PersonsInHouse = 2;
+
+
+-- 4.8 No. of different items sold during given period
+SELECT COUNT(DISTINCT ItemID) AS NumOfDifferentItemsSold
+FROM Purchase;
+
+-- 4.9 Sales amount collected per item during given period
+SELECT ItemName, SUM(Price) AS TotalSalesAmount
+FROM Item
+JOIN Purchase ON Item.ItemID = Purchase.ItemID
+GROUP BY ItemName;
+
+-- 4.10 Revenue generated during given period
+SELECT SUM(Price) AS RevenueGenerated
+FROM Item
+JOIN Purchase ON Item.ItemID = Purchase.ItemID;

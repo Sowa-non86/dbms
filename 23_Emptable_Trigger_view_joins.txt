@@ -1,0 +1,161 @@
+1. **Create Database (assuming the database name is `company_data`):**
+
+CREATE DATABASE company_data;
+
+
+2. **Create Tables:**
+
+**Emp Table:
+
+
+CREATE TABLE Emp (
+  ename VARCHAR(255) PRIMARY KEY,
+  street VARCHAR(255),
+  city VARCHAR(255)
+);
+
+
+INSERT INTO Emp (ename, street, city)
+VALUES ('Aisha Kapoor', 'Gandhi Nagar', 'Mumbai'),
+       ('Rahul Sharma', 'Sector 17', 'Chandigarh'),
+       ('Priya Patel', 'MG Road', 'Bangalore'),
+       ('Vikram Singh', 'Janakpuri', 'Delhi'),
+       ('Nikita Desai', 'Koregaon Park', 'Pune');
+
+
+
+
+
+
+* **Works Table:**
+
+
+CREATE TABLE Works (
+  ename VARCHAR(255) REFERENCES Emp(ename),
+  cname VARCHAR(255) REFERENCES Company(cname),
+  sal NUMBER,
+  PRIMARY KEY (ename, cname)
+);
+
+
+
+INSERT INTO Works (ename, cname, sal)
+VALUES ('Aisha Kapoor', 'TCS', 800000),
+       ('Rahul Sharma', 'Infosys', 750000),
+       ('Priya Patel', 'Wipro', 680000),
+       ('Vikram Singh', 'Accenture', 920000),
+       ('Nikita Desai', 'HCL', 550000),
+       ('Aisha Kapoor', 'Mphasis', 600000);  -- Aisha works in two companies
+
+
+
+* **Company Table:**
+
+CREATE TABLE Company (
+  cname VARCHAR(255) PRIMARY KEY,
+  city VARCHAR(255)
+);
+
+
+
+
+INSERT INTO Company (cname, city)
+VALUES ('TCS', 'Mumbai'),
+       ('Infosys', 'Bangalore'),
+       ('Wipro', 'Pune'),
+       ('Accenture', 'Delhi'),
+       ('HCL', 'Noida'),
+       ('Mphasis', 'Bangalore');
+
+
+* **Manager Table (assuming a manager can only manage one employee):**
+
+CREATE TABLE Manager (
+  ename VARCHAR(255) PRIMARY KEY,
+  mname VARCHAR(255) REFERENCES Emp(ename) -- Can be NULL if managing no one
+);
+
+
+INSERT INTO Manager (ename, mname)
+VALUES ('Aisha Kapoor', 'Nikita Desai');  -- Aisha manages Nikita
+
+
+These queries create the database `company_data` and the four tables (`Emp`, `Works`, `Company`, and `Manager`) with their respective columns and relationships.  
+
+
+
+
+
+1. Find all companies located in every city where company 'FBC' is located:
+SELECT c.cname
+FROM Company c
+INNER JOIN Works w ON c.cname = w.cname
+INNER JOIN Company fbc ON fbc.cname = 'FBC'
+WHERE c.city = fbc.city
+GROUP BY c.cname;
+
+
+2.List all managers in 'FBC' with a raise:
+
+WITH ManagerRaise AS (
+  SELECT ename,
+         CASE
+           WHEN sal * 1.1 <= 1000000 THEN sal * 1.1
+           ELSE sal * 1.025
+         END AS new_sal
+  FROM Works w
+  WHERE cname = 'FBC' AND ename IN (SELECT ename FROM Manager)
+)
+SELECT ename, new_sal
+FROM ManagerRaise;
+
+
+
+3.Find companies with higher average salary than 'FBC':
+
+SELECT c.cname
+FROM Company c
+INNER JOIN Works w ON c.cname = w.cname
+GROUP BY c.cname
+HAVING AVG(sal) > (
+  SELECT AVG(sal)
+  FROM Works
+  WHERE cname = 'FBC'
+);
+
+
+4.Find all employees who work in companies located in 'Pune':
+
+SELECT e.ename
+FROM Emp e
+INNER JOIN Works w ON e.ename = w.ename
+INNER JOIN Company c ON c.cname = w.cname
+WHERE c.city = 'Pune';
+
+
+5.Create a view to display manager information and company:
+
+CREATE VIEW ManagerInfo AS
+SELECT m.ename AS manager, e.ename AS employee, c.cname AS company
+FROM Manager m
+INNER JOIN Emp e ON m.ename = e.ename
+INNER JOIN Works w ON e.ename = w.ename
+INNER JOIN Company c ON c.cname = w.cname;
+
+
+6.Create a trigger to update salary based on manager status:
+
+CREATE TRIGGER SalaryUpdate
+AFTER UPDATE ON Works
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT * FROM Manager WHERE Manager.ename = NEW.ename) THEN
+    UPDATE Works
+    SET sal = NEW.sal * 1.09
+    WHERE ename = NEW.ename;
+  ELSE
+    UPDATE Works
+    SET sal = NEW.sal * 1.08
+    WHERE ename = NEW.ename;
+  END IF;
+END;

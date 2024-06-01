@@ -1,0 +1,104 @@
+CREATE TABLE dept (
+    dept_no INT PRIMARY KEY,
+    dname VARCHAR(100),
+    loc VARCHAR(100),
+    mgrcode INT
+);
+
+CREATE TABLE emp (
+    emp_no INT PRIMARY KEY,
+    ename VARCHAR(100),
+    designation VARCHAR(100)
+);
+
+CREATE TABLE project (
+    proj_no INT PRIMARY KEY,
+    proj_name VARCHAR(100),
+    status VARCHAR(100)
+);
+
+
+
+-- Inserting into dept table
+INSERT INTO dept (dept_no, dname, loc, mgrcode)
+VALUES 
+(1, 'INVENTORY', 'PUNE', 101),
+(2, 'MARKETING', 'MUMBAI', 102),
+(3, 'COMPUTER', 'BANGALORE', 103);
+
+-- Inserting into emp table
+INSERT INTO emp (emp_no, ename, designation)
+VALUES 
+(101, 'John Doe', 'Manager'),
+(102, 'Alice Smith', 'Assistant Manager'),
+(103, 'Bob Johnson', 'Developer'),
+(104, 'Emma Brown', 'Manager'),
+(105, 'Michael Clark', 'Developer');
+
+-- Inserting into project table
+INSERT INTO project (proj_no, proj_name, status)
+VALUES 
+(1, 'Blood Bank', 'Complete'),
+(2, 'Database Migration', 'Incomplete'),
+(3, 'Website Redesign', 'Complete');
+
+-- Assigning employees to projects
+UPDATE project SET proj_no = 101 WHERE proj_name = 'Blood Bank'; -- John Doe is working on 'Blood Bank'
+UPDATE project SET proj_no = 104 WHERE proj_name = 'Database Migration'; -- Emma Brown is working on 'Database Migration'
+UPDATE project SET proj_no = 105 WHERE proj_name = 'Database Migration'; -- Michael Clark is also working on 'Database Migration'
+
+
+
+
+-- 1. List all employees of 'INVENTORY' department of 'PUNE' location.
+SELECT e.ename
+FROM emp e
+JOIN dept d ON e.emp_no = d.mgrcode
+WHERE d.dname = 'INVENTORY' AND d.loc = 'PUNE';
+
+-- 2. Give the names of employees who are working on 'Blood Bank' project.
+SELECT e.ename
+FROM emp e
+JOIN project p ON e.emp_no = p.proj_no
+WHERE p.proj_name = 'Blood Bank';
+
+-- 3. Given the name of managers from "MARKETING" department.
+SELECT e.ename
+FROM emp e
+JOIN dept d ON e.emp_no = d.mgrcode
+WHERE d.dname = 'MARKETING';
+
+-- 4. Give all the employees working under status "Incomplete" projects.
+SELECT e.ename
+FROM emp e
+JOIN project p ON e.emp_no = p.proj_no
+WHERE p.status = 'Incomplete';
+
+-- 5. Write a trigger before insert on emp table to auto insert the record and also update the dept table.
+DELIMITER //
+CREATE TRIGGER insert_emp_dept_trigger
+BEFORE INSERT ON emp
+FOR EACH ROW
+BEGIN
+    DECLARE mgr_dept_no INT;
+    SELECT dept_no INTO mgr_dept_no FROM dept WHERE mgrcode = NEW.emp_no;
+    INSERT INTO dept (dept_no, dname, loc, mgrcode) VALUES (NEW.emp_no, NEW.ename, 'New Location', NULL);
+    UPDATE dept SET mgrcode = NEW.emp_no WHERE dept_no = mgr_dept_no;
+END //
+DELIMITER ;
+
+-- Inserting a new employee record
+INSERT INTO emp (emp_no, ename, designation) VALUES (106, 'Sarah Green', 'Analyst');
+
+
+SELECT * FROM dept;
+
+
+-- 6. Write a view to display all the employees in the "COMPUTER" Department.
+CREATE VIEW computer_department_employees AS
+SELECT e.ename, e.designation
+FROM emp e
+JOIN dept d ON e.emp_no = d.mgrcode
+WHERE d.dname = 'COMPUTER';
+
+SELECT * FROM computer_department_employees;

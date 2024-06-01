@@ -1,0 +1,155 @@
+CREATE TABLE Customer (
+    cust_no INT PRIMARY KEY,
+    cname VARCHAR(100),
+    city VARCHAR(100)
+);
+
+CREATE TABLE orders (
+    order_no INT PRIMARY KEY,
+    odate DATE,
+    cust_no INT,
+    ord_amt DECIMAL(10,2)
+);
+
+CREATE TABLE order_item (
+    order_no INT,
+    item_no INT,
+    Qty INT,
+    PRIMARY KEY (order_no, item_no)
+);
+
+CREATE TABLE item (
+    item_no INT PRIMARY KEY,
+    unit_price DECIMAL(10,2)
+);
+
+CREATE TABLE shipment (
+    order_no INT,
+    warehouse_no INT,
+    ship_date DATE,
+    PRIMARY KEY (order_no, warehouse_no)
+);
+
+CREATE TABLE warehouse (
+    warehouse_no INT PRIMARY KEY,
+    city VARCHAR(100)
+);
+
+
+
+
+-- Inserting into Customer table
+INSERT INTO Customer (cust_no, cname, city)
+VALUES 
+(1, 'Jose Lopez', 'New York'),
+(2, 'Maria Rodriguez', 'Los Angeles'),
+(3, 'Juan Martinez', 'Chicago'),
+(4, 'Ana Garcia', 'Houston'),
+(5, 'Pedro Hernandez', 'New York');
+
+-- Inserting into orders table
+INSERT INTO orders (order_no, odate, cust_no, ord_amt)
+VALUES 
+(101, '2024-05-01', 1, 100.00),
+(102, '2024-05-10', 2, 150.00),
+(103, '2024-05-20', 3, 200.00),
+(104, '2024-05-25', 1, 120.00),
+(105, '2024-06-05', 2, 180.00);
+
+-- Inserting into order_item table
+INSERT INTO order_item (order_no, item_no, Qty)
+VALUES 
+(101, 1, 2),
+(102, 2, 3),
+(103, 1, 1),
+(104, 3, 2),
+(105, 2, 4);
+
+-- Inserting into item table
+INSERT INTO item (item_no, unit_price)
+VALUES 
+(1, 10.00),
+(2, 15.00),
+(3, 20.00),
+(4, 25.00),
+(5, 30.00);
+
+-- Inserting into shipment table
+INSERT INTO shipment (order_no, warehouse_no, ship_date)
+VALUES 
+(101, 1, '2024-05-05'),
+(102, 2, '2024-05-15'),
+(103, 3, '2024-05-25'),
+(104, 1, '2024-06-01'),
+(105, 2, '2024-06-10');
+
+-- Inserting into warehouse table
+INSERT INTO warehouse (warehouse_no, city)
+VALUES 
+(1, 'New York'),
+(2, 'Los Angeles'),
+(3, 'Chicago'),
+(4, 'Houston'),
+(5, 'Dallas');
+
+
+
+
+-- 1. List the order # and ship_date for all orders shipped from warehouse number W2.
+SELECT s.order_no, s.ship_date
+FROM shipment s
+WHERE s.warehouse_no = 2;
+
+-- 2. List the warehouse information from which the customer named 'Jose Lopez' was shipped his order.
+SELECT w.*
+FROM warehouse w
+JOIN shipment s ON w.warehouse_no = s.warehouse_no
+JOIN orders o ON s.order_no = o.order_no
+JOIN Customer c ON o.cust_no = c.cust_no
+WHERE c.cname = 'Jose Lopez';
+
+-- 3. List the orders that were not shipped within 30 days of ordering.
+SELECT o.*
+FROM orders o
+LEFT JOIN shipment s ON o.order_no = s.order_no
+WHERE s.ship_date IS NULL OR DATEDIFF(s.ship_date, o.odate) > 30;
+
+-- 4. List the order # for orders that were shipped from all warehouses that the company has in New York.
+SELECT o.order_no
+FROM orders o
+JOIN shipment s ON o.order_no = s.order_no
+WHERE s.warehouse_no IN (SELECT w.warehouse_no FROM warehouse w WHERE w.city = 'New York')
+GROUP BY o.order_no
+HAVING COUNT(DISTINCT s.warehouse_no) = (SELECT COUNT(*) FROM warehouse WHERE city = 'New York');
+
+-- 5. Write a cursor to extract order details.
+DELIMITER //
+CREATE PROCEDURE order_details()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE order_number INT;
+    DECLARE ship_date DATE;
+    
+    DECLARE cur CURSOR FOR SELECT order_no, ship_date FROM shipment;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO order_number, ship_date;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        SELECT * FROM orders WHERE order_no = order_number;
+        SELECT * FROM order_item WHERE order_no = order_number;
+    END LOOP;
+
+    CLOSE cur;
+END //
+DELIMITER ;
+
+CALL order_details();
+
+
+
+

@@ -1,0 +1,79 @@
+4. Implement the following Queries
+
+1. Create a collection named books.
+
+2. Insert 5 records with field TITLE, DESCRIPTION, BY URL TAGS AND LIKES
+
+3. Insert I more document in collection with additional field of user name and comments
+
+4. Display all the documents whose title is 'MySQL'.
+
+5. Display all the documents written by 'john' or whose title is 'mongodb 6. Display all the documents whose title is 'mongodb' and written by john
+
+7. Display all the documents whose like is greater than 10.
+
+8. Display all the documents whose like is greater than 100 and whose title is either 'mongodb' or written by 'john'
+
+9. Update the title of 'MySQL' document to 'MySQL overview
+
+10. Delete the document titled 'nosql overview.
+
+11. Display exactly two documents written by 'john'.
+
+12. Display the second document published by 'john'.
+
+13. Display all the books in the sorted fashion.    use mysql query to create table, insert data and do following queries
+
+
+-- 1. Create a collection named books.
+CREATE TABLE books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    TITLE VARCHAR(255),
+    DESCRIPTION TEXT,
+    BY_AUTHOR VARCHAR(255),
+    URL VARCHAR(255),
+    TAGS VARCHAR(255),
+    LIKES INT
+);
+
+-- 2. Insert 5 records with field TITLE, DESCRIPTION, BY URL TAGS AND LIKES
+INSERT INTO books (TITLE, DESCRIPTION, BY_AUTHOR, URL, TAGS, LIKES) VALUES
+('MySQL', 'Introduction to MySQL database management system', 'John', 'https://example.com/mysql', 'database, SQL', 20),
+('MongoDB', 'Introduction to MongoDB NoSQL database', 'Jane', 'https://example.com/mongodb', 'database, NoSQL', 15),
+('Node.js', 'Introduction to Node.js for backend development', 'John', 'https://example.com/nodejs', 'Node.js, JavaScript', 12),
+('Python', 'Introduction to Python programming language', 'Alice', 'https://example.com/python', 'Python, Programming', 8),
+('React', 'Introduction to React.js for front-end development', 'Bob', 'https://example.com/react', 'React.js, JavaScript', 10);
+
+-- 3. Insert 1 more document in collection with additional field of user name and comments
+INSERT INTO books (TITLE, DESCRIPTION, BY_AUTHOR, URL, TAGS, LIKES, USER_NAME, COMMENTS) VALUES
+('MongoDB', 'MongoDB overview', 'Alice', 'https://example.com/mongodb', 'database, NoSQL', 25, 'Emma', 'Great overview of MongoDB.');
+
+-- 4. Display all the documents whose title is 'MySQL'.
+SELECT * FROM books WHERE TITLE = 'MySQL';
+
+-- 5. Display all the documents written by 'john' or whose title is 'mongodb'.
+SELECT * FROM books WHERE BY_AUTHOR = 'John' OR TITLE = 'MongoDB';
+
+-- 6. Display all the documents whose title is 'mongodb' and written by john.
+SELECT * FROM books WHERE TITLE = 'MongoDB' AND BY_AUTHOR = 'John';
+
+-- 7. Display all the documents whose like is greater than 10.
+SELECT * FROM books WHERE LIKES > 10;
+
+-- 8. Display all the documents whose like is greater than 100 and whose title is either 'mongodb' or written by 'john'.
+SELECT * FROM books WHERE (LIKES > 100) AND (TITLE = 'MongoDB' OR BY_AUTHOR = 'John');
+
+-- 9. Update the title of 'MySQL' document to 'MySQL overview'.
+UPDATE books SET TITLE = 'MySQL overview' WHERE TITLE = 'MySQL';
+
+-- 10. Delete the document titled 'nosql overview.
+DELETE FROM books WHERE TITLE = 'nosql overview';
+
+-- 11. Display exactly two documents written by 'john'.
+SELECT * FROM books WHERE BY_AUTHOR = 'John' LIMIT 2;
+
+-- 12. Display the second document published by 'john'.
+SELECT * FROM books WHERE BY_AUTHOR = 'John' LIMIT 1, 1;
+
+-- 13. Display all the books in the sorted fashion.
+SELECT * FROM books ORDER BY LIKES DESC;

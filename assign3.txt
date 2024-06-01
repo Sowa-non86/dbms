@@ -1,0 +1,231 @@
+mysql> create database assign3;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> use assign3;
+Database changed
+mysql> CREATE TABLE Account (
+    ->   Acc_no INT PRIMARY KEY,
+    ->   branch_name VARCHAR(50) NOT NULL,
+    ->   balance FLOAT NOT NULL,
+    ->   FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+    -> );
+ERROR 1824 (HY000): Failed to open the referenced table 'branch'
+mysql> 
+mysql> CREATE TABLE Branch (
+    ->   branch_name VARCHAR(50) PRIMARY KEY,
+    ->   branch_city VARCHAR(50) NOT NULL,
+    ->   assets DECIMAL(10,2) NOT NULL
+    -> );
+Query OK, 0 rows affected (0.07 sec)
+
+mysql> 
+mysql> CREATE TABLE Customer (
+    ->   cust_name VARCHAR(50) PRIMARY KEY,
+    ->   cust_street VARCHAR(100),
+    ->   cust_city VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> 
+mysql> CREATE TABLE Depositor (
+    ->   cust_name VARCHAR(50) PRIMARY KEY,
+    ->   Acc_no INT NOT NULL,
+    ->   FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    ->   FOREIGN KEY (Acc_no) REFERENCES Account(Acc_no)
+    -> );
+ERROR 1824 (HY000): Failed to open the referenced table 'account'
+mysql> 
+mysql> CREATE TABLE Loan (
+    ->   loan_no INT PRIMARY KEY,
+    ->   branch_name VARCHAR(50) NOT NULL,
+    ->   amount DECIMAL(10,2) NOT NULL,
+    ->   FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> 
+mysql> CREATE TABLE Borrower (
+    ->   cust_name VARCHAR(50) PRIMARY KEY,
+    ->   loan_no INT NOT NULL,
+    ->   FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    ->   FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql>  CREATE TABLE Depositor (
+    ->     ->   cust_name VARCHAR(50) PRIMARY KEY,
+    ->     ->   Acc_no INT NOT NULL,
+    ->     ->   FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    ->     ->   FOREIGN KEY (Acc_no) REFERENCES Account(Acc_no)
+    ->     -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '->   cust_name VARCHAR(50) PRIMARY KEY,
+    ->   Acc_no INT NOT NULL,
+    ->   F' at line 2
+mysql> CREATE TABLE Depositor ( cust_name VARCHAR(50) PRIMARY KEY, Acc_no INT NOT NULL, FOREIGN KEY (cust_name) REFERENCES Customer(cust_name), FOREIGN KEY (Acc_no) REFERENCES Account(Acc_no));
+ERROR 1824 (HY000): Failed to open the referenced table 'account'
+mysql> CREATE TABLE Account (
+    ->  Acc_no INT PRIMARY KEY,
+    ->      branch_name VARCHAR(50) NOT NULL,
+    ->  balance FLOAT NOT NULL,
+    ->   FOREIGN KEY (branch_name) REFERENCES Branch(branch_name));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql>  CREATE TABLE Depositor (
+    ->  cust_name VARCHAR(50) PRIMARY KEY,
+    -> Acc_no INT NOT NULL,
+    ->  FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    ->  FOREIGN KEY (Acc_no) REFERENCES Account(Acc_no) );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> -- Branches
+mysql> INSERT INTO Branch (branch_name, branch_city, assets) VALUES
+    ->   ('Shivaji nagar', 'Pune', 850000),
+    ->   ('Main Branch', 'Pune', 1200000),
+    ->   ('Sharanpur road', 'Mumbai', 550000);
+Query OK, 3 rows affected (0.03 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> 
+mysql> -- Customers
+mysql> INSERT INTO Customer (cust_name, cust_street, cust_city) VALUES
+    ->   ('NIKHIL GANDHI', '101 Park Street', 'Pune'),
+    ->   ('PREET TILALA', '5th Avenue', 'Mumbai'),
+    ->   ('ANISH KULKARNI', 'Lakeside Road', 'Pune'),
+    ->   ('SWANAND GARGE', 'MG Road', 'Mumbai'),
+    ->   ('ATHARV GURAV', 'Green Boulevard', 'Pune');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> 
+mysql> -- Accounts
+mysql> INSERT INTO Account (Acc_no, branch_name, balance) VALUES
+       (1001, 'Shivaji nagar', 5000),
+       (1002, 'Shivaji nagar', 12500),
+       (1003, 'Main Branch', 8000),
+       (1004, 'Sharanpur road', 2000), 
+       (1005, 'Main Branch', 4500);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> 
+mysql> -- Depositor
+mysql> INSERT INTO Depositor (cust_name, Acc_no) VALUES
+       ('NIKHIL GANDHI', 1001),
+       ('SWANAND GARGE', 1002),
+       ('PREET TILALA', 1005),
+       ('ANISH KULKARNI', 1003); 
+ERROR 1062 (23000): Duplicate entry 'NIKHIL GANDHI' for key 'depositor.PRIMARY'
+mysql> 
+mysql> -- Loans
+mysql> INSERT INTO Loan (loan_no, branch_name, amount) VALUES
+       (2001, 'Shivaji nagar', 15000),
+       (2002, 'Main Branch', 80000),
+       (2003, 'Sharanpur road', 25000);
+Query OK, 3 rows affected (0.00 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> 
+mysql> -- Borrower
+mysql> INSERT INTO Borrower (cust_name, loan_no) VALUES
+       ('NIKHIL GANDHI', 2001),
+       ('ANISH KULKARNI', 2002),
+       ('SWANAND GARGE', 2003);
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Depositor (cust_name, Acc_no) VALUES
+       ('NIKHIL GANDHI', 1001),
+       ('ATHARV GURAV', 1002),
+       ('PREET TILALA', 1005),
+       ('ANISH KULKARNI', 1003); 
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> SELECT * FROM ACCOUNT;
++--------+----------------+---------+
+| Acc_no | branch_name    | balance |
++--------+----------------+---------+
+|   1001 | Shivaji nagar  |    5000 |
+|   1002 | Shivaji nagar  |   12500 |
+|   1003 | Main Branch    |    8000 |
+|   1004 | Sharanpur road |    2000 |
+|   1005 | Main Branch    |    4500 |
++--------+----------------+---------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT * FROM DEPOSITORSELECT * FROM DEPOSITOR;
++----------------+--------+
+| cust_name      | Acc_no |
++----------------+--------+
+| NIKHIL GANDHI  |   1001 |
+| ATHARV GURAV   |   1002 |
+| ANISH KULKARNI |   1003 |
+| PREET TILALA   |   1005 |
++----------------+--------+
+4 rows in set (0.00 sec)
+
+mysql> SELECT * FROM BORROWER;
++----------------+---------+
+| cust_name      | loan_no |
++----------------+---------+
+| NIKHIL GANDHI  |    2001 |
+| ANISH KULKARNI |    2002 |
+| SWANAND GARGE  |    2003 |
++----------------+---------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT * FROM LOAN;
++---------+----------------+----------+
+| loan_no | branch_name    | amount   |
++---------+----------------+----------+
+|    2001 | Shivaji nagar  | 15000.00 |
+|    2002 | Main Branch    | 80000.00 |
+|    2003 | Sharanpur road | 25000.00 |
++---------+----------------+----------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT * FROM CUSTOMER;
++----------------+-----------------+-----------+
+| cust_name      | cust_street     | cust_city |
++----------------+-----------------+-----------+
+| ANISH KULKARNI | Lakeside Road   | Pune      |
+| ATHARV GURAV   | Green Boulevard | Pune      |
+| NIKHIL GANDHI  | 101 Park Street | Pune      |
+| PREET TILALA   | 5th Avenue      | Mumbai    |
+| SWANAND GARGE  | MG Road         | Mumbai    |
++----------------+-----------------+-----------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT * FROM BRANCH;
++----------------+-------------+------------+
+| branch_name    | branch_city | assets     |
++----------------+-------------+------------+
+| Main Branch    | Pune        | 1200000.00 |
+| Sharanpur road | Mumbai      |  550000.00 |
+| Shivaji nagar  | Pune        |  850000.00 |
++----------------+-------------+------------+
+3 rows in set (0.00 sec)
+
+mysql> use assign2;
+Database changed
+mysql> tee C:\Users\nikhi\OneDrive\Desktop\DBMS\assign2.txt
+mysql> use assign3;
+Database changed
+mysql> select branch_name from loan;
++----------------+
+| branch_name    |
++----------------+
+| Main Branch    |
+| Sharanpur road |
+| Shivaji nagar  |
++----------------+
+3 rows in set (0.00 sec)
+
+mysql> select loan_no from loan where branch_name="shivaji nagar" and amount>12000; 
++---------+
+| loan_no |
++---------+
+|    2001 |
++---------+
+1 row in set (0.00 sec)
+

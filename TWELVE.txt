@@ -1,0 +1,139 @@
+CREATE TABLE Customer (
+    cust_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    mobile VARCHAR(15)
+);
+
+CREATE TABLE Book (
+    book_id INT PRIMARY KEY,
+    title VARCHAR(100),
+    category ENUM('Biographic', 'Cultural', 'Historical', 'Cooking', 'Kids'),
+    price DECIMAL(10, 2)
+);
+
+CREATE TABLE Purchase (
+    purchase_id INT PRIMARY KEY,
+    cust_id INT,
+    book_id INT,
+    quantity INT,
+    FOREIGN KEY (cust_id) REFERENCES Customer(cust_id),
+    FOREIGN KEY (book_id) REFERENCES Book(book_id)
+);
+
+
+
+-- Inserting into Customer table
+INSERT INTO Customer (cust_id, name, mobile)
+VALUES 
+(1, 'John Doe', '1234567890'),
+(2, 'Alice Smith', '9876543210'),
+(3, 'Bob Johnson', '8765432109'),
+(4, 'Emma Brown', '2345678901'),
+(5, 'Michael Clark', '3456789012');
+
+-- Inserting into Book table
+INSERT INTO Book (book_id, title, category, price)
+VALUES 
+(1, 'Biography of Einstein', 'Biographic', 20.00),
+(2, 'Cultural Heritage', 'Cultural', 15.00),
+(3, 'World History', 'Historical', 25.00),
+(4, 'Cooking Recipes', 'Cooking', 18.00),
+(5, 'Kids Bedtime Stories', 'Kids', 12.00);
+
+-- Inserting into Purchase table
+INSERT INTO Purchase (purchase_id, cust_id, book_id, quantity)
+VALUES 
+(101, 1, 1, 2),
+(102, 1, 3, 1),
+(103, 1, 4, 2),
+(104, 2, 2, 3),
+(105, 2, 3, 1),
+(106, 2, 5, 2),
+(107, 3, 3, 2),
+(108, 3, 5, 1),
+(109, 4, 4, 3),
+(110, 5, 1, 1),
+(111, 5, 2, 2),
+(112, 5, 4, 1),
+(113, 5, 5, 2);
+
+
+
+
+-- 2. List names of persons and categories of books they purchased and total cost.
+SELECT c.name, b.category, SUM(b.price * p.quantity) AS total_cost
+FROM Customer c
+JOIN Purchase p ON c.cust_id = p.cust_id
+JOIN Book b ON p.book_id = b.book_id
+GROUP BY c.name, b.category;
+
+-- 3. If a person purchases books of Rs. 5000/- then he is allowed to purchase additional books of Rs. 1000/-
+SELECT c.name, SUM(b.price * p.quantity) AS total_cost,
+    CASE 
+        WHEN SUM(b.price * p.quantity) >= 5000 THEN 'Allowed additional purchase of Rs. 1000'
+        ELSE 'Not eligible for additional purchase'
+    END AS additional_purchase
+FROM Customer c
+JOIN Purchase p ON c.cust_id = p.cust_id
+JOIN Book b ON p.book_id = b.book_id
+GROUP BY c.name;
+
+-- 4. List of persons who purchased books more than Rs. 5000/-
+SELECT c.name, SUM(b.price * p.quantity) AS total_cost
+FROM Customer c
+JOIN Purchase p ON c.cust_id = p.cust_id
+JOIN Book b ON p.book_id = b.book_id
+GROUP BY c.name
+HAVING total_cost > 5000;
+
+
+
+-- 5. Name of person who purchased minimum amount of books and a name of person who purchased maximum amount of books.
+SELECT 
+    MIN(c.name) AS min_purchase_person,
+    MAX(c.name) AS max_purchase_person
+FROM Customer c
+JOIN Purchase p ON c.cust_id = p.cust_id
+JOIN Book b ON p.book_id = b.book_id
+GROUP BY c.name
+ORDER BY SUM(b.price * p.quantity);
+
+-- 6. Total sell (count of books and amount) during given period.
+SELECT 
+    COUNT(*) AS total_books_sold,
+    SUM(b.price * p.quantity) AS total_amount_sold
+FROM Purchase p
+JOIN Book b ON p.book_id = b.book_id;
+
+-- 7. Count of books sold in each category.
+SELECT 
+    b.category,
+    SUM(p.quantity) AS books_sold
+FROM Purchase p
+JOIN Book b ON p.book_id = b.book_id
+GROUP BY b.category;
+
+-- 8. Count of persons who purchased books of cost more than Rs. 3000/-.
+SELECT 
+    COUNT(DISTINCT c.name) AS persons_purchased_above_3000
+FROM Customer c
+JOIN Purchase p ON c.cust_id = p.cust_id
+JOIN Book b ON p.book_id = b.book_id
+WHERE b.price * p.quantity > 3000;
+
+
+-- 9. List names of persons who purchased books more than 3 times in a given period.
+SELECT 
+    c.name
+FROM Customer c
+JOIN Purchase p ON c.cust_id = p.cust_id
+GROUP BY c.name
+HAVING COUNT(*) > 3;
+
+
+-- 10. List of different books purchased during given period.
+SELECT DISTINCT 
+    b.title,
+    b.category
+FROM Book b
+JOIN Purchase p ON b.book_id = p.book_id;

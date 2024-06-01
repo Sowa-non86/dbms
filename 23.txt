@@ -1,0 +1,117 @@
+23) Consider the following DB
+Emp(ename.street,city)
+Workstenmac.cname.sal)
+Company(cname.city)
+Managertename,mname)
+
+Implement the following SQL queries
+
+1.Find all companies located in every city in which company "FBC" is located.
+
+2. List all managers in of "FBC' a 10% raise unless the salary become greater than Rs 10 lakhs in such cases give only 2.5% raise.
+
+3.Find those companies whose employees earn a higher salary, on average, than the 
+average salary at FBC 
+
+4.Find all the employees who work in companies located in "Pune
+
+5. Create a view which will display the all the information of manager, the company they work in.
+
+6. Create a trigger which will update the salary of all employees other than manager with 8 % of their salary and for manager 9% of their salary.
+
+
+-- 1. Creating Tables
+
+-- Table: Emp
+CREATE TABLE Emp (
+    ename VARCHAR(100),
+    street VARCHAR(100),
+    city VARCHAR(100),
+    sal DECIMAL(10, 2),
+    tename VARCHAR(100)
+);
+
+-- Table: Work
+CREATE TABLE Work (
+    cname VARCHAR(100),
+    sal DECIMAL(10, 2)
+);
+
+-- Table: Company
+CREATE TABLE Company (
+    cname VARCHAR(100),
+    city VARCHAR(100)
+);
+
+-- Table: Manager
+CREATE TABLE Manager (
+    tename VARCHAR(100),
+    mname VARCHAR(100),
+    sal DECIMAL(10, 2)
+);
+
+-- 2. Inserting Sample Data
+
+-- Insert sample data into Emp
+INSERT INTO Emp (ename, street, city, sal, tename) VALUES 
+('Emp1', 'Street1', 'Pune', 50000.00, 'Manager1'),
+('Emp2', 'Street2', 'Mumbai', 60000.00, 'Manager1'),
+('Emp3', 'Street3', 'Pune', 70000.00, 'Manager2');
+
+-- Insert sample data into Work
+INSERT INTO Work (cname, sal) VALUES 
+('FBC', 80000.00),
+('XYZ', 90000.00),
+('ABC', 100000.00);
+
+-- Insert sample data into Company
+INSERT INTO Company (cname, city) VALUES 
+('FBC', 'Pune'),
+('XYZ', 'Mumbai'),
+('ABC', 'Pune');
+
+-- Insert sample data into Manager
+INSERT INTO Manager (tename, mname, sal) VALUES 
+('Manager1', 'ManagerA', 120000.00),
+('Manager2', 'ManagerB', 130000.00);
+
+
+-- 1. Find all companies located in every city in which company "FBC" is located.
+SELECT cname
+FROM Company
+WHERE city IN (
+    SELECT city
+    FROM Company
+    WHERE cname = 'FBC'
+);
+
+-- 3. Find those companies whose employees earn a higher salary, on average, than the average salary at FBC.
+SELECT c.cname
+FROM Company AS c
+JOIN Emp AS e ON c.city = e.city
+GROUP BY c.cname
+HAVING AVG(e.sal) > (
+    SELECT AVG(w.sal)
+    FROM Work AS w
+    JOIN Company AS c2 ON w.cname = c2.cname
+    WHERE c2.cname = 'FBC'
+);
+
+-- 4. Find all the employees who work in companies located in "Pune".
+SELECT ename
+FROM Emp
+WHERE city = 'Pune';
+
+-- 6. Create a trigger which will update the salary of all employees other than managers with 8% of their salary and for managers 9% of their salary.
+DELIMITER //
+CREATE TRIGGER UpdateSalary
+BEFORE UPDATE ON Emp
+FOR EACH ROW
+BEGIN
+    IF NEW.tename IS NULL THEN
+        SET NEW.sal = OLD.sal * 1.08;
+    ELSE
+        SET NEW.sal = OLD.sal * 1.09;
+    END IF;
+END//
+DELIMITER ;

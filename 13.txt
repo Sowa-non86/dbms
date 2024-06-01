@@ -1,0 +1,235 @@
+13. A fish shop is selling approximately 100Kg fish daily, Shop is having 10 types of different fishes in the shop. Cost of each fish is different and it is per Kg. Shop man wants to keep following record.
+
+1. Quantity of fishes purchase each day, cost of purchase, transportation cost.
+
+2. Quantity of fishes sold per day and selling price
+
+3. Name and mobile number of person purchasing fish and types of fishes he purchases
+
+4. Find frequency of a person purchasing fishes
+
+5. Find daily sales amount and sales amount between given period
+
+6. If any person has purchased 5 times in a month and total cost of purchase is more than Rs 1000/- then given him discount of 10% for next 3 purchases in the same month
+
+7. If any person purchases SKg of costliest fish then he will be offered 1Kg of non- selling fish.
+
+8. List name of persons purchasing costliest fish 5 times in a month.
+
+9. List names of persons purchasing fishes 3 times in a month.
+
+10. List names of fishes which are sold every day and which are sold once in a month.
+
+
+
+-- 1. Creating the Database
+CREATE DATABASE FishShop;
+USE FishShop;
+
+-- 2. Creating Tables
+
+-- Table: Fish
+CREATE TABLE Fish (
+    FishID INT AUTO_INCREMENT PRIMARY KEY,
+    FishName VARCHAR(100),
+    CostPerKg DECIMAL(10, 2)
+);
+
+-- Table: DailyPurchase
+CREATE TABLE DailyPurchase (
+    PurchaseID INT AUTO_INCREMENT PRIMARY KEY,
+    PurchaseDate DATE,
+    QuantityKg DECIMAL(10, 2),
+    CostOfPurchase DECIMAL(10, 2),
+    TransportationCost DECIMAL(10, 2)
+);
+
+-- Table: DailySale
+CREATE TABLE DailySale (
+    SaleID INT AUTO_INCREMENT PRIMARY KEY,
+    SaleDate DATE,
+    FishID INT,
+    QuantityKg DECIMAL(10, 2),
+    SellingPrice DECIMAL(10, 2),
+    FOREIGN KEY (FishID) REFERENCES Fish(FishID)
+);
+
+-- Table: Customer
+CREATE TABLE Customer (
+    CustomerID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    MobileNumber VARCHAR(15)
+);
+
+-- Table: CustomerPurchase
+CREATE TABLE CustomerPurchase (
+    PurchaseID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID INT,
+    FishID INT,
+    QuantityKg DECIMAL(10, 2),
+    PurchaseDate DATE,
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
+    FOREIGN KEY (FishID) REFERENCES Fish(FishID)
+);
+
+-- 3. Inserting Initial Data
+
+-- Insert into Fish
+INSERT INTO Fish (FishName, CostPerKg) VALUES 
+('Salmon', 500.00), 
+('Tuna', 400.00), 
+('Trout', 350.00), 
+('Mackerel', 300.00), 
+('Sardine', 200.00), 
+('Catfish', 150.00), 
+('Tilapia', 100.00), 
+('Bass', 450.00), 
+('Cod', 250.00), 
+('Herring', 220.00);
+
+-- Insert sample data into DailyPurchase
+INSERT INTO DailyPurchase (PurchaseDate, QuantityKg, CostOfPurchase, TransportationCost) VALUES
+('2023-05-01', 120.00, 36000.00, 2000.00),
+('2023-05-02', 110.00, 33000.00, 1800.00);
+
+-- Insert sample data into DailySale
+INSERT INTO DailySale (SaleDate, FishID, QuantityKg, SellingPrice) VALUES
+('2023-05-01', 1, 10.00, 6000.00),
+('2023-05-01', 2, 20.00, 8000.00);
+
+-- Insert sample data into Customer
+INSERT INTO Customer (Name, MobileNumber) VALUES
+('Alice', '555-1234'),
+('Bob', '555-5678');
+
+-- Insert sample data into CustomerPurchase
+INSERT INTO CustomerPurchase (CustomerID, FishID, QuantityKg, PurchaseDate) VALUES
+(1, 1, 5.00, '2023-05-01'),
+(1, 2, 3.00, '2023-05-01'),
+(2, 3, 10.00, '2023-05-02');
+
+-- 4. Queries for Specific Requirements
+
+-- 4.1 Quantity of fishes purchased each day, cost of purchase, transportation cost
+SELECT PurchaseDate, QuantityKg, CostOfPurchase, TransportationCost
+FROM DailyPurchase;
+
+-- 4.2 Quantity of fishes sold per day and selling price
+SELECT SaleDate, FishID, QuantityKg, SellingPrice
+FROM DailySale;
+
+-- 4.3 Name and mobile number of person purchasing fish and types of fishes he purchases
+SELECT c.Name, c.MobileNumber, f.FishName, cp.QuantityKg
+FROM Customer c
+JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+JOIN Fish f ON cp.FishID = f.FishID;
+
+-- 4.4 Find frequency of a person purchasing fishes
+SELECT c.Name, COUNT(cp.PurchaseID) AS PurchaseFrequency
+FROM Customer c
+JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+GROUP BY c.Name;
+
+-- 4.5 Find daily sales amount and sales amount between given period
+-- Daily sales amount
+SELECT SaleDate, SUM(SellingPrice * QuantityKg) AS DailySalesAmount
+FROM DailySale
+GROUP BY SaleDate;
+
+-- Sales amount between given period
+SELECT SUM(SellingPrice * QuantityKg) AS TotalSalesAmount
+FROM DailySale
+WHERE SaleDate BETWEEN '2023-05-01' AND '2023-05-31';
+
+-- 4.6 Discount for frequent purchasers
+-- Finding eligible customers
+SELECT c.CustomerID, c.Name, COUNT(cp.PurchaseID) AS PurchaseCount, SUM(f.CostPerKg * cp.QuantityKg) AS TotalPurchaseAmount
+FROM Customer c
+JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+JOIN Fish f ON cp.FishID = f.FishID
+WHERE cp.PurchaseDate BETWEEN '2023-05-01' AND '2023-05-31'
+GROUP BY c.CustomerID, c.Name
+HAVING COUNT(cp.PurchaseID) >= 5 AND SUM(f.CostPerKg * cp.QuantityKg) > 1000;
+
+-- Applying the discount
+UPDATE CustomerPurchase
+SET PurchasePrice = PurchasePrice * 0.9
+WHERE CustomerID IN (
+    SELECT c.CustomerID
+    FROM Customer c
+    JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+    JOIN Fish f ON cp.FishID = f.FishID
+    WHERE cp.PurchaseDate BETWEEN '2023-05-01' AND '2023-05-31'
+    GROUP BY c.CustomerID
+    HAVING COUNT(cp.PurchaseID) >= 5 AND SUM(f.CostPerKg * cp.QuantityKg) > 1000
+)
+AND PurchaseDate BETWEEN '2023-05-01' AND '2023-05-31'
+AND PurchaseID IN (
+    SELECT PurchaseID
+    FROM (
+        SELECT PurchaseID
+        FROM CustomerPurchase
+        WHERE CustomerID IN (
+            SELECT c.CustomerID
+            FROM Customer c
+            JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+            JOIN Fish f ON cp.FishID = f.FishID
+            WHERE cp.PurchaseDate BETWEEN '2023-05-01' AND '2023-05-31'
+            GROUP BY c.CustomerID
+            HAVING COUNT(cp.PurchaseID) >= 5 AND SUM(f.CostPerKg * cp.QuantityKg) > 1000
+        )
+        ORDER BY PurchaseDate DESC
+        LIMIT 3
+    ) AS Subquery
+);
+
+-- 4.7 If any person purchases 5Kg of costliest fish then he will be offered 1Kg of non-selling fish
+-- Assuming non-selling fish is identified (e.g., 'Herring')
+-- Finding costliest fish
+SELECT FishID, FishName, CostPerKg
+FROM Fish
+ORDER BY CostPerKg DESC
+LIMIT 1;
+
+-- Offering 1Kg of non-selling fish
+INSERT INTO CustomerPurchase (CustomerID, FishID, QuantityKg, PurchaseDate)
+SELECT cp.CustomerID, (SELECT FishID FROM Fish WHERE FishName = 'Herring'), 1.00, CURDATE()
+FROM CustomerPurchase cp
+JOIN Fish f ON cp.FishID = f.FishID
+WHERE f.CostPerKg = (SELECT MAX(CostPerKg) FROM Fish)
+AND cp.QuantityKg >= 5
+AND cp.PurchaseDate = CURDATE();
+
+-- 4.8 List name of persons purchasing costliest fish 5 times in a month
+SELECT c.Name
+FROM Customer c
+JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+JOIN Fish f ON cp.FishID = f.FishID
+WHERE f.CostPerKg = (SELECT MAX(CostPerKg) FROM Fish)
+AND cp.PurchaseDate BETWEEN '2023-05-01' AND '2023-05-31'
+GROUP BY c.Name
+HAVING COUNT(cp.PurchaseID) >= 5;
+
+-- 4.9 List names of persons purchasing fishes 3 times in a month
+SELECT c.Name
+FROM Customer c
+JOIN CustomerPurchase cp ON c.CustomerID = cp.CustomerID
+WHERE cp.PurchaseDate BETWEEN '2023-05-01' AND '2023-05-31'
+GROUP BY c.Name
+HAVING COUNT(cp.PurchaseID) >= 3;
+
+-- 4.10 List names of fishes which are sold every day and which are sold once in a month
+-- Fishes sold every day
+SELECT f.FishName
+FROM Fish f
+JOIN DailySale ds ON f.FishID = ds.FishID
+GROUP BY f.FishName
+HAVING COUNT(DISTINCT ds.SaleDate) = (SELECT COUNT(DISTINCT SaleDate) FROM DailySale);
+
+-- Fishes sold once in a month
+SELECT f.FishName
+FROM Fish f
+JOIN DailySale ds ON f.FishID = ds.FishID
+WHERE ds.SaleDate BETWEEN '2023-05-01' AND '2023-05-31'
+GROUP BY f.FishName
+HAVING COUNT(ds.SaleID) = 1;

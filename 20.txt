@@ -1,0 +1,143 @@
+28) Consider the following database
+
+Branch (branch-name, branch-city, assets)
+
+Customer (customer-name, customer-street, customer-city) Loan (loan-number, branch-name, amount)
+
+Borrower (customer-name, loan-number) Account (account-number, branch-name, balance)
+
+Depositor (customer-name, account-number)
+
+1. Create a trigger to check the validity of balance (should be between $90,000 and $100,000) before a row is inserted in the Account table.
+
+2. Create a trigger which does not allow any DML operation on the loan table for Perry-ridge branch.
+
+3. Display the customer names who have taken the loan
+
+4. Display the details of customer with branch name "Tilak road pune
+
+5. Display the Number of customers whose branch is borivali Mumbai
+
+
+
+-- 1. Creating Tables
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(255) PRIMARY KEY,
+    branch_city VARCHAR(255),
+    assets DECIMAL(10, 2)
+);
+
+CREATE TABLE Customer (
+    customer_name VARCHAR(255) PRIMARY KEY,
+    customer_street VARCHAR(255),
+    customer_city VARCHAR(255)
+);
+
+CREATE TABLE Loan (
+    loan_number INT PRIMARY KEY,
+    branch_name VARCHAR(255),
+    amount DECIMAL(10, 2),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    customer_name VARCHAR(255),
+    loan_number INT,
+    PRIMARY KEY (customer_name, loan_number),
+    FOREIGN KEY (customer_name) REFERENCES Customer(customer_name),
+    FOREIGN KEY (loan_number) REFERENCES Loan(loan_number)
+);
+
+CREATE TABLE Account (
+    account_number INT PRIMARY KEY,
+    branch_name VARCHAR(255),
+    balance DECIMAL(10, 2),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Depositor (
+    customer_name VARCHAR(255),
+    account_number INT,
+    PRIMARY KEY (customer_name, account_number),
+    FOREIGN KEY (customer_name) REFERENCES Customer(customer_name),
+    FOREIGN KEY (account_number) REFERENCES Account(account_number)
+);
+
+-- 2. Create trigger to check the validity of balance before a row is inserted in the Account table.
+DELIMITER //
+CREATE TRIGGER CheckBalanceValidity
+BEFORE INSERT ON Account
+FOR EACH ROW
+BEGIN
+    IF NEW.balance < 90000 OR NEW.balance > 100000 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Balance should be between $90,000 and $100,000';
+    END IF;
+END //
+DELIMITER ;
+
+-- 3. Create trigger to disallow DML operations on the loan table for Perry-ridge branch.
+DELIMITER //
+CREATE TRIGGER PreventLoanOperations
+BEFORE INSERT ON Loan
+FOR EACH ROW
+BEGIN
+    DECLARE branchName VARCHAR(255);
+    SELECT branch_name INTO branchName FROM Branch WHERE branch_name = NEW.branch_name;
+    IF branchName = 'Perry-ridge' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'DML operations not allowed on the loan table for Perry-ridge branch';
+    END IF;
+END //
+DELIMITER ;
+
+-- 4. Sample Data Insertion
+INSERT INTO Branch (branch_name, branch_city, assets) VALUES
+('Perry-ridge', 'New York', 150000),
+('Tilak road pune', 'Pune', 200000),
+('Borivali', 'Mumbai', 180000);
+
+INSERT INTO Customer (customer_name, customer_street, customer_city) VALUES
+('John Doe', '123 Main St', 'New York'),
+('Jane Smith', '456 Elm St', 'Pune'),
+('Alice Johnson', '789 Oak St', 'Mumbai');
+
+INSERT INTO Loan (loan_number, branch_name, amount) VALUES
+(1, 'Perry-ridge', 50000),
+(2, 'Tilak road pune', 70000),
+(3, 'Borivali', 60000);
+
+INSERT INTO Borrower (customer_name, loan_number) VALUES
+('John Doe', 1),
+('Jane Smith', 2),
+('Alice Johnson', 3);
+
+INSERT INTO Account (account_number, branch_name, balance) VALUES
+(101, 'Perry-ridge', 95000),
+(102, 'Tilak road pune', 98000),
+(103, 'Borivali', 100000);
+
+INSERT INTO Depositor (customer_name, account_number) VALUES
+('John Doe', 101),
+('Jane Smith', 102),
+('Alice Johnson', 103);
+
+-- 5. Display customer names who have taken the loan.
+SELECT DISTINCT customer_name
+FROM Borrower;
+
+-- 6. Display details of customers with branch name "Tilak road pune".
+SELECT c.*
+FROM Customer c
+JOIN Borrower b ON c.customer_name = b.customer_name
+JOIN Loan l ON b.loan_number = l.loan_number
+WHERE l.branch_name = 'Tilak road pune';
+
+-- 7. Display the number of customers whose branch is Borivali Mumbai.
+SELECT COUNT(DISTINCT customer_name) AS NumCustomers
+FROM Borrower b
+JOIN Loan l ON b.loan_number = l.loan_number
+JOIN Branch br ON l.branch_name = br.branch_name
+WHERE l.branch_name = 'Borivali' AND br.branch_city = 'Mumbai';
+

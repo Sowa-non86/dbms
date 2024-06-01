@@ -1,0 +1,138 @@
+CREATE TABLE Distributor (
+    distributor_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    mobile_number VARCHAR(15),
+    email VARCHAR(100),
+    state VARCHAR(100),
+    city VARCHAR(100)
+);
+
+CREATE TABLE OrderDetails (
+    order_id INT PRIMARY KEY,
+    distributor_id INT,
+    mobiles_ordered INT,
+    deposit_amount DECIMAL(10, 2),
+    total_amount DECIMAL(10, 2),
+    FOREIGN KEY (distributor_id) REFERENCES Distributor(distributor_id)
+);
+
+CREATE TABLE Model (
+    model_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    price DECIMAL(10, 2)
+);
+
+CREATE TABLE OrderItems (
+    order_id INT,
+    model_id INT,
+    quantity INT,
+    PRIMARY KEY (order_id, model_id),
+    FOREIGN KEY (order_id) REFERENCES OrderDetails(order_id),
+    FOREIGN KEY (model_id) REFERENCES Model(model_id)
+);
+
+
+
+
+-- Inserting into Distributor table
+INSERT INTO Distributor (distributor_id, name, mobile_number, email, state, city)
+VALUES 
+(1, 'ABC Distributors', '9876543210', 'abc@example.com', 'California', 'Los Angeles'),
+(2, 'XYZ Traders', '1234567890', 'xyz@example.com', 'New York', 'New York'),
+(3, 'PQR Enterprises', '4567890123', 'pqr@example.com', 'Texas', 'Houston'),
+(4, 'LMN Wholesalers', '7890123456', 'lmn@example.com', 'Florida', 'Miami'),
+(5, 'EFG Suppliers', '2345678901', 'efg@example.com', 'California', 'San Francisco');
+
+-- Inserting into OrderDetails table
+INSERT INTO OrderDetails (order_id, distributor_id, mobiles_ordered, deposit_amount, total_amount)
+VALUES 
+(101, 1, 800, 80000.00, 80000.00),
+(102, 2, 1500, 150000.00, 142700.00),
+(103, 3, 300, 30000.00, 30000.00),
+(104, 4, 1200, 120000.00, 120000.00),
+(105, 5, 250, 25000.00, 25000.00);
+
+-- Inserting into Model table
+INSERT INTO Model (model_id, name, price)
+VALUES 
+(1, 'Model X', 100.00),
+(2, 'Model Y', 150.00),
+(3, 'Model Z', 200.00),
+(4, 'Model A', 80.00),
+(5, 'Model B', 120.00);
+
+-- Inserting into OrderItems table
+INSERT INTO OrderItems (order_id, model_id, quantity)
+VALUES 
+(101, 1, 200),
+(101, 2, 300),
+(102, 3, 500),
+(102, 4, 200),
+(103, 1, 100),
+(104, 2, 800),
+(104, 5, 400),
+(105, 3, 150),
+(105, 4, 100),
+(105, 5, 50);
+
+
+
+-- 2. Number of mobiles ordered by distributor
+SELECT distributor_id, SUM(mobiles_ordered) AS total_mobiles_ordered
+FROM OrderDetails
+GROUP BY distributor_id;
+
+-- 3. Distributors eligible for credit
+SELECT distributor_id
+FROM OrderDetails
+WHERE mobiles_ordered >= 1000 AND deposit_amount >= total_amount;
+
+-- 4. Distributors eligible for discount
+SELECT distributor_id
+FROM OrderDetails
+WHERE total_amount > 100000;
+
+-- 5. Count of distributors in each state, city
+SELECT state, city, COUNT(*) AS distributor_count
+FROM Distributor
+GROUP BY state, city;
+
+-- 6. Revenue generated from each distributor
+SELECT distributor_id, SUM(total_amount) AS revenue_generated
+FROM OrderDetails
+GROUP BY distributor_id;
+
+-- 7. Revenue generated from each state, city
+SELECT d.state, d.city, SUM(od.total_amount) AS revenue_generated
+FROM Distributor d
+JOIN OrderDetails od ON d.distributor_id = od.distributor_id
+GROUP BY d.state, d.city;
+
+
+---8
+SELECT od.distributor_id, GROUP_CONCAT(m.name ORDER BY m.name SEPARATOR ', ') AS ordered_models
+FROM OrderItems oi
+JOIN OrderDetails od ON oi.order_id = od.order_id
+JOIN Model m ON oi.model_id = m.model_id
+GROUP BY od.distributor_id;
+
+
+--9
+SELECT od.distributor_id, COUNT(*) AS model_count
+FROM OrderItems oi
+JOIN OrderDetails od ON oi.order_id = od.order_id
+GROUP BY od.distributor_id;
+
+
+
+--10
+SELECT m.name AS model_name, d.name AS distributor_name
+FROM OrderItems oi
+JOIN OrderDetails od ON oi.order_id = od.order_id
+JOIN Distributor d ON od.distributor_id = d.distributor_id
+JOIN Model m ON oi.model_id = m.model_id;
+
+
+
+
+

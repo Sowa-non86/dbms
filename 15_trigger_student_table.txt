@@ -1,0 +1,99 @@
+CREATE TABLE Student (
+    Name VARCHAR(50),
+    Distance DECIMAL(5, 2),
+    HouseType VARCHAR(10),
+    FatherWorking VARCHAR(3),
+    FatherOrg VARCHAR(30),
+    MotherWorking VARCHAR(3),
+    MotherOrg VARCHAR(30),
+    Fees DECIMAL(10, 2),
+    FeesPaid BOOLEAN
+);
+
+
+1.Name, distance of his house from school, own or rental house:
+
+SELECT Name, Distance, HouseType FROM Student;
+
+
+2.Father/Mother working status, type of organization they are working:
+
+SELECT FatherWorking, FatherOrg, MotherWorking, MotherOrg FROM Student;
+
+
+3.Count of students whose one parent is working and both parents are working:
+
+SELECT 
+    SUM(CASE WHEN (FatherWorking = 'Yes' AND MotherWorking = 'No') OR (FatherWorking = 'No' AND MotherWorking = 'Yes') THEN 1 ELSE 0 END) AS OneParentWorking,
+    SUM(CASE WHEN FatherWorking = 'Yes' AND MotherWorking = 'Yes' THEN 1 ELSE 0 END) AS BothParentsWorking
+FROM Student;
+
+4.Count of students leaving in own house and rental:
+
+SELECT 
+    SUM(CASE WHEN HouseType = 'Own' THEN 1 ELSE 0 END) AS OwnHouse,
+    SUM(CASE WHEN HouseType = 'Rental' THEN 1 ELSE 0 END) AS RentalHouse
+FROM Student;
+
+
+5.If the student is deleted from the table, then his information must be transferred to another table:
+
+CREATE TABLE DeletedStudents (
+    Name VARCHAR(50),
+    Distance DECIMAL(5, 2),
+    HouseType VARCHAR(10),
+    FatherWorking VARCHAR(3),
+    FatherOrg VARCHAR(30),
+    MotherWorking VARCHAR(3),
+    MotherOrg VARCHAR(30),
+    Fees DECIMAL(10, 2),
+    FeesPaid BOOLEAN
+);
+
+CREATE TRIGGER backup_deleted_student
+BEFORE DELETE ON Student
+FOR EACH ROW
+BEGIN
+    INSERT INTO DeletedStudents VALUES(OLD.Name, OLD.Distance, OLD.HouseType, OLD.FatherWorking, OLD.FatherOrg, OLD.MotherWorking, OLD.MotherOrg, OLD.Fees, OLD.FeesPaid);
+END;
+
+
+6.Count of students whose father and mother's type of organization is the same:
+
+SELECT COUNT(*) AS SameOrganization
+FROM Student
+WHERE FatherOrg = MotherOrg AND FatherOrg IS NOT NULL AND MotherOrg IS NOT NULL;
+
+
+7.Name of students whose mother is working and name of students whose father is working (distinct names):
+
+SELECT DISTINCT Name
+FROM Student
+WHERE MotherWorking = 'Yes'
+UNION
+SELECT DISTINCT Name
+FROM Student
+WHERE FatherWorking = 'Yes';
+
+
+8.Student whose one parent is working will be given a 10% discount in fees:
+
+UPDATE Student
+SET Fees = Fees * 0.9
+WHERE (FatherWorking = 'Yes' AND MotherWorking = 'No') 
+   OR (FatherWorking = 'No' AND MotherWorking = 'Yes');
+
+
+9.Count of students who paid their fees and count of students who did not pay their fees:
+
+SELECT 
+    SUM(CASE WHEN FeesPaid THEN 1 ELSE 0 END) AS FeesPaid,
+    SUM(CASE WHEN NOT FeesPaid THEN 1 ELSE 0 END) AS FeesNotPaid
+FROM Student;
+
+
+10.Name of students according to their distances from school:
+
+SELECT Name, Distance 
+FROM Student
+ORDER BY Distance;
