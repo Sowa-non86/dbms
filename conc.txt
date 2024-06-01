@@ -1,0 +1,201 @@
+Key Concepts Explained in Easy Manner
+
+#### 1. Create Tables with Appropriate Constraints
+- **Tables**: Structured formats to store data in rows and columns.
+- **Constraints**: Rules applied to columns to ensure data integrity.
+  - **Primary Key**: Uniquely identifies each row.
+  - **Foreign Key**: Links to primary key of another table to enforce referential integrity.
+  - **Unique**: Ensures all values in a column are different.
+  - **Not Null**: Ensures a column cannot have NULL values.
+  - **Check**: Ensures that all values in a column satisfy a specific condition.
+
+#### a) Create Views on the Table
+- **Views**: Virtual tables based on a SELECT query. They don’t store data themselves but provide a way to look at data from one or more tables.
+  ```sql
+  CREATE VIEW EmployeeView AS
+  SELECT name, department_id FROM employees;
+  ```
+
+#### b) Create Indices on the Table
+- **Indices**: Improve the speed of data retrieval operations on a database table.
+  ```sql
+  CREATE INDEX idx_employee_name ON employees(name);
+  ```
+
+#### c) Create Sequence on the Table
+- **Sequences**: Generate unique numeric values, often used for primary key values.
+  ```sql
+  CREATE SEQUENCE emp_seq START WITH 1 INCREMENT BY 1;
+  ```
+
+#### d) Alter the Schema
+- **Alter Schema**: Modify the structure of an existing table.
+  ```sql
+  ALTER TABLE employees ADD COLUMN address VARCHAR(255);
+  ALTER TABLE employees DROP COLUMN address;
+  ALTER TABLE employees ADD CONSTRAINT chk_age CHECK (age >= 18);
+  ALTER TABLE employees DROP CONSTRAINT chk_age;
+  ```
+
+#### Write DML Queries
+- **DML (Data Manipulation Language)**: Commands to modify data in the database.
+  ```sql
+  INSERT INTO employees (name, age, department_id) VALUES ('John Doe', 30, 1);
+  UPDATE employees SET age = 31 WHERE name = 'John Doe';
+  DELETE FROM employees WHERE name = 'John Doe';
+  ```
+
+#### 2. Execute ‘SELECT’ Queries
+
+#### a) Using ORDER BY Clause
+- **ORDER BY**: Sorts the result set.
+  ```sql
+  SELECT * FROM employees ORDER BY name ASC;
+  ```
+
+#### b) Using GROUP BY Clause
+- **GROUP BY**: Groups rows sharing a property so aggregate functions can be applied.
+  ```sql
+  SELECT department_id, COUNT(*) FROM employees GROUP BY department_id;
+  ```
+
+#### c) Using Aggregate Functions
+- **Aggregate Functions**: Perform a calculation on a set of values.
+  ```sql
+  SELECT AVG(age) FROM employees;
+  ```
+
+#### d) Using HAVING Clause
+- **HAVING**: Filters groups based on conditions.
+  ```sql
+  SELECT department_id, COUNT(*) FROM employees GROUP BY department_id HAVING COUNT(*) > 5;
+  ```
+
+#### e) Using Set Operators
+- **Set Operators**: Combine results of two or more queries.
+  - **UNION**: Combines results, removing duplicates.
+  - **INTERSECT**: Returns only common rows.
+  - **MINUS**: Returns rows from the first query not in the second.
+  ```sql
+  SELECT name FROM employees_a UNION SELECT name FROM employees_b;
+  ```
+
+#### f) SQL Single Row Functions
+- **Single Row Functions**: Operate on each row and return one result per row.
+  ```sql
+  SELECT UPPER(name), ROUND(salary, 2), SYSDATE FROM employees;
+  ```
+
+#### 3. Join and Subqueries
+
+#### a) Joins
+- **Equijoin**: Joins tables based on matching column values.
+  ```sql
+  SELECT * FROM employees e JOIN departments d ON e.department_id = d.department_id;
+  ```
+- **Non-equijoin**: Joins tables based on a condition other than equality.
+  ```sql
+  SELECT * FROM employees e, salaries s WHERE e.salary BETWEEN s.min_salary AND s.max_salary;
+  ```
+- **Self-join**: A table joined with itself.
+  ```sql
+  SELECT a.name, b.name FROM employees a, employees b WHERE a.manager_id = b.employee_id;
+  ```
+- **Outer join**: Includes unmatched rows as well.
+  ```sql
+  SELECT * FROM employees e LEFT JOIN departments d ON e.department_id = d.department_id;
+  ```
+
+#### b) Subqueries with Operators
+- **Subqueries**: Nested queries used within other queries.
+  - **Single row subqueries**: Return one row.
+    ```sql
+    SELECT * FROM employees WHERE department_id = (SELECT department_id FROM departments WHERE name = 'HR');
+    ```
+  - **Multiple row subqueries**: Return multiple rows.
+    ```sql
+    SELECT * FROM employees WHERE department_id IN (SELECT department_id FROM departments);
+    ```
+  - **Correlated subqueries**: Refer to columns from the outer query.
+    ```sql
+    SELECT name FROM employees e WHERE salary > (SELECT AVG(salary) FROM employees WHERE department_id = e.department_id);
+    ```
+
+#### 4. PL/SQL Operations
+
+#### a) Stored Procedures
+- **Stored Procedures**: Reusable SQL code blocks.
+  ```sql
+  CREATE PROCEDURE IncreaseSalary (emp_id INT, increment DECIMAL)
+  BEGIN
+      UPDATE employees SET salary = salary + increment WHERE employee_id = emp_id;
+  END;
+  ```
+
+#### b) Cursors
+- **Cursors**: Allow row-by-row processing of query results.
+  ```sql
+  DECLARE cursor_emp CURSOR FOR SELECT employee_id, name FROM employees;
+  ```
+
+#### c) Stored Functions
+- **Stored Functions**: Return a single value.
+  ```sql
+  CREATE FUNCTION GetEmployeeAge (emp_id INT) RETURNS INT
+  BEGIN
+      DECLARE emp_age INT;
+      SELECT age INTO emp_age FROM employees WHERE employee_id = emp_id;
+      RETURN emp_age;
+  END;
+  ```
+
+#### d) Triggers
+- **Triggers**: Execute automatically in response to specific events.
+  ```sql
+  CREATE TRIGGER BeforeInsertEmployee
+  BEFORE INSERT ON employees
+  FOR EACH ROW
+  BEGIN
+      SET NEW.created_at = NOW();
+  END;
+  ```
+
+### Potential Viva Questions
+
+1. **What are the primary key and foreign key constraints?**
+   - A primary key uniquely identifies each record in a table, while a foreign key ensures referential integrity by linking to a primary key in another table.
+
+2. **Explain the difference between a view and a table.**
+   - A table stores data physically, whereas a view is a virtual table based on a SELECT query and does not store data itself.
+
+3. **What is the purpose of an index in a database?**
+   - An index improves the speed of data retrieval operations on a database table.
+
+4. **What is a sequence and how is it used?**
+   - A sequence generates unique numeric values, often used for primary key values in tables.
+
+5. **How does the ORDER BY clause work in SQL?**
+   - The ORDER BY clause sorts the result set of a query by one or more columns.
+
+6. **What is the difference between GROUP BY and HAVING clauses?**
+   - GROUP BY groups rows sharing a property to apply aggregate functions, while HAVING filters these groups based on conditions.
+
+7. **Explain the concept of joins and their types.**
+   - Joins combine rows from two or more tables based on a related column. Types include inner join, left join, right join, and full outer join.
+
+8. **What are stored procedures and how do they differ from functions?**
+   - Stored procedures are reusable SQL code blocks that can perform operations but do not return a value, whereas functions return a value and are used mainly for calculations.
+
+9. **What are triggers and when are they used?**
+   - Triggers are automatic actions executed in response to specific events on a table, such as INSERT, UPDATE, or DELETE operations.
+
+10. **Can you explain what a cursor is and how it is used in PL/SQL?**
+    - A cursor allows row-by-row processing of query results, often used in loops to handle individual rows.
+
+11. **Describe the different types of subqueries.**
+    - Single row subqueries return one row, multiple row subqueries return multiple rows, and correlated subqueries reference columns from the outer query.
+
+12. **What is the use of the EXISTS operator in SQL?**
+    - The EXISTS operator checks for the existence of rows returned by a subquery and returns TRUE if at least one row is found.
+
+By understanding these concepts and preparing answers for the potential questions, you will be well-prepared for your end semester viva.
